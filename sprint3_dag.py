@@ -19,9 +19,7 @@ from scripts.etl_loader import (
 
 db_url = "postgresql://intern:intern@postgres:5432/postgres"
 
-# Логика повторного запуска и логирования результатов
 def on_dag_success_context(context):
-    #Вызывается автоматически, если ВСЕ задачи выполнены успешно
     log_dag_end(
         dag_id=context['dag'].dag_id,
         run_id=context['run_id'],
@@ -30,7 +28,6 @@ def on_dag_success_context(context):
     )
 
 def on_dag_failure_context(context):
-    #Вызывается автоматически, если пайплайн упал на любом из шагов
     log_dag_end(
         dag_id=context['dag'].dag_id,
         run_id=context['run_id'],
@@ -57,7 +54,6 @@ with DAG(
     on_failure_callback=on_dag_failure_context  # Триггер на падение
 ) as dag:
 
-    # Новая задача: Фиксируем старт в таблице до начала вычислений
     task_init_run = PythonOperator(
         task_id='init_etl_run',
         python_callable=log_dag_start,
@@ -95,5 +91,5 @@ with DAG(
     )
 
 
-    # Сначала пишем лог старта -> Грузим данные -> Трансформируем -> Проверяем качество -> Публикуем витрину
+    # лог старта -> грузим данные -> трансформируем -> проверяем качество -> публикуем витрину
     task_init_run >> [task_load_students, task_load_student_marks] >> task_transform >> task_quality_check >> task_publish
